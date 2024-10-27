@@ -28,56 +28,68 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.label1 = new System.Windows.Forms.Label();
-            this.formsPlot1 = new ScottPlot.FormsPlot();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.SuspendLayout();
+            components = new System.ComponentModel.Container();
+            label1 = new Label();
+            formsPlot1 = new ScottPlot.WinForms.FormsPlot();
+            timer1 = new System.Windows.Forms.Timer(components);
+            formsPlot2 = new ScottPlot.WinForms.FormsPlot();
+            SuspendLayout();
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(93, 15);
-            this.label1.TabIndex = 6;
-            this.label1.Text = "Peak Frequency:";
+            label1.AutoSize = true;
+            label1.Location = new Point(14, 12);
+            label1.Name = "label1";
+            label1.Size = new Size(113, 20);
+            label1.TabIndex = 6;
+            label1.Text = "Peak Frequency:";
             // 
             // formsPlot1
             // 
-            this.formsPlot1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.formsPlot1.Location = new System.Drawing.Point(12, 41);
-            this.formsPlot1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.formsPlot1.Name = "formsPlot1";
-            this.formsPlot1.Size = new System.Drawing.Size(555, 273);
-            this.formsPlot1.TabIndex = 7;
+            formsPlot1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            formsPlot1.DisplayScale = 1.25F;
+            formsPlot1.Location = new Point(14, 55);
+            formsPlot1.Margin = new Padding(5, 4, 5, 4);
+            formsPlot1.Name = "formsPlot1";
+            formsPlot1.Size = new Size(891, 436);
+            formsPlot1.TabIndex = 7;
             // 
             // timer1
             // 
-            this.timer1.Enabled = true;
-            this.timer1.Interval = 20;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            timer1.Enabled = true;
+            timer1.Interval = 20;
+            timer1.Tick += timer1_Tick;
+            // 
+            // formsPlot2
+            // 
+            formsPlot2.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            formsPlot2.DisplayScale = 1.25F;
+            formsPlot2.Location = new Point(14, 485);
+            formsPlot2.Margin = new Padding(5, 4, 5, 4);
+            formsPlot2.Name = "formsPlot2";
+            formsPlot2.Size = new Size(891, 436);
+            formsPlot2.TabIndex = 8;
             // 
             // FftMonitorForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(580, 326);
-            this.Controls.Add(this.formsPlot1);
-            this.Controls.Add(this.label1);
-            this.Name = "FftMonitorForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "FFT Monitor";
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(920, 910);
+            Controls.Add(formsPlot2);
+            Controls.Add(formsPlot1);
+            Controls.Add(label1);
+            Margin = new Padding(3, 4, 3, 4);
+            Name = "FftMonitorForm";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "FFT Monitor";
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
         private Label label1;
-        private ScottPlot.FormsPlot formsPlot1;
+        private ScottPlot.WinForms.FormsPlot formsPlot1;
         private System.Windows.Forms.Timer timer1;
+        private ScottPlot.WinForms.FormsPlot formsPlot2;
     }
 }

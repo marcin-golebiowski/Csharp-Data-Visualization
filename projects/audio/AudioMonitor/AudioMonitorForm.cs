@@ -17,11 +17,10 @@ public partial class AudioMonitorForm : Form
 
         AudioValues = new double[fmt.SampleRate * 10 / 1000]; // 10 milliseconds
 
-        formsPlot1.Plot.AddSignal(AudioValues, fmt.SampleRate / 1000);
+        formsPlot1.Plot.Add.Signal(AudioValues, fmt.SampleRate / 1000);
         formsPlot1.Plot.YLabel("Level");
         formsPlot1.Plot.XLabel("Time (milliseconds)");
         formsPlot1.Plot.Title($"{fmt.Encoding} ({fmt.BitsPerSample}-bit) {fmt.SampleRate} KHz");
-        formsPlot1.Plot.SetAxisLimitsY(-.5, .5);
         formsPlot1.Refresh();
 
         AudioDevice.DataAvailable += WaveIn_DataAvailable;
@@ -37,7 +36,7 @@ public partial class AudioMonitorForm : Form
 
     private void timer1_Tick(object sender, EventArgs e)
     {
-        formsPlot1.RefreshRequest();
+        formsPlot1.Refresh();
     }
 
     private void WaveIn_DataAvailable(object? sender, WaveInEventArgs e)

@@ -19,7 +19,7 @@ namespace AudioMonitor
     public partial class MenuForm : Form
     {
         public readonly MMDevice[] AudioDevices = new MMDeviceEnumerator()
-            .EnumerateAudioEndPoints(DataFlow.All, DeviceState.Active)
+            .EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)
             .ToArray();
 
         public MenuForm()

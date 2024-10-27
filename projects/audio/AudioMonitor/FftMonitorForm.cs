@@ -1,14 +1,17 @@
 ﻿using NAudio.CoreAudioApi;
 using NAudio.Wave;
+using System.Numerics;
 
 namespace AudioMonitor;
 
 public partial class FftMonitorForm : Form
 {
-    readonly double[] AudioValues;
+    readonly double[] LeftAudioValues;
+    readonly double[] RightAudioValues;
 
     readonly WasapiCapture AudioDevice;
-    readonly double[] FftValues;
+    readonly double[] LeftFftValues;
+    readonly double[] RightFftValues;
 
     public FftMonitorForm(WasapiCapture audioDevice)
     {
@@ -16,22 +19,38 @@ public partial class FftMonitorForm : Form
         AudioDevice = audioDevice;
         WaveFormat fmt = audioDevice.WaveFormat;
 
-        AudioValues = new double[fmt.SampleRate / 10];
-        double[] paddedAudio = FftSharp.Pad.ZeroPad(AudioValues);
-        double[] fftMag = FftSharp.Transform.FFTpower(paddedAudio);
-        FftValues = new double[fftMag.Length];
-        double fftPeriod = FftSharp.Transform.FFTfreqPeriod(fmt.SampleRate, fftMag.Length);
 
-        formsPlot1.Plot.AddSignal(FftValues, 1.0 / fftPeriod);
+
+        LeftAudioValues = new double[fmt.SampleRate];
+        double[] paddedAudio = FftSharp.Pad.ZeroPad(LeftAudioValues);
+        var fft = FftSharp.FFT.Forward(paddedAudio);
+        var mag = FftSharp.FFT.Magnitude(fft);
+        LeftFftValues = new double[fft.Length];
+        double fftPeriod = FftSharp.FFT.FrequencyResolution(fmt.SampleRate, mag.Length);
+        formsPlot1.Plot.Add.Signal(LeftFftValues, 1.0 / (fftPeriod));
         formsPlot1.Plot.YLabel("Spectral Power");
         formsPlot1.Plot.XLabel("Frequency (kHz)");
         formsPlot1.Plot.Title($"{fmt.Encoding} ({fmt.BitsPerSample}-bit) {fmt.SampleRate} KHz");
-        formsPlot1.Plot.SetAxisLimits(0, 6000, 0, .005);
+        formsPlot1.Plot.Axes.SetLimits(0, 6000, 0, 0.005);
         formsPlot1.Refresh();
 
-        AudioDevice.DataAvailable += WaveIn_DataAvailable;
-        AudioDevice.StartRecording();
 
+        RightAudioValues = new double[fmt.SampleRate];
+        paddedAudio = FftSharp.Pad.ZeroPad(RightAudioValues);
+        fft = FftSharp.FFT.Forward(paddedAudio);
+        mag = FftSharp.FFT.Magnitude(fft);
+        RightFftValues = new double[fft.Length];
+        fftPeriod = FftSharp.FFT.FrequencyResolution(fmt.SampleRate, mag.Length);
+        formsPlot2.Plot.Add.Signal(RightFftValues, 1.0 / (fftPeriod));
+        formsPlot2.Plot.YLabel("Spectral Power");
+        formsPlot2.Plot.XLabel("Frequency (kHz)");
+        formsPlot2.Plot.Title($"{fmt.Encoding} ({fmt.BitsPerSample}-bit) {fmt.SampleRate} KHz");
+        formsPlot2.Plot.Axes.SetLimits(0, 6000, 0, 0.005);
+        formsPlot2.Refresh();
+
+
+        AudioDevice.StartRecording();
+        AudioDevice.DataAvailable += WaveIn_DataAvailable;
         FormClosed += FftMonitorForm_FormClosed;
     }
 
@@ -48,25 +67,34 @@ public partial class FftMonitorForm : Form
         int bytesPerSample = bytesPerSamplePerChannel * AudioDevice.WaveFormat.Channels;
         int bufferSampleCount = e.Buffer.Length / bytesPerSample;
 
-        if (bufferSampleCount >= AudioValues.Length)
+        if (bufferSampleCount >= LeftAudioValues.Length)
         {
-            bufferSampleCount = AudioValues.Length;
+            bufferSampleCount = LeftAudioValues.Length;
         }
 
         if (bytesPerSamplePerChannel == 2 && AudioDevice.WaveFormat.Encoding == WaveFormatEncoding.Pcm)
         {
             for (int i = 0; i < bufferSampleCount; i++)
-                AudioValues[i] = BitConverter.ToInt16(e.Buffer, i * bytesPerSample);
+            {
+                LeftAudioValues[i] = BitConverter.ToInt16(e.Buffer, i * bytesPerSample);
+                RightAudioValues[i] = BitConverter.ToInt16(e.Buffer, i * bytesPerSample + 2);
+            }
         }
         else if (bytesPerSamplePerChannel == 4 && AudioDevice.WaveFormat.Encoding == WaveFormatEncoding.Pcm)
         {
             for (int i = 0; i < bufferSampleCount; i++)
-                AudioValues[i] = BitConverter.ToInt32(e.Buffer, i * bytesPerSample);
+            {
+                LeftAudioValues[i] = BitConverter.ToInt32(e.Buffer, i * bytesPerSample);
+                RightAudioValues[i] = BitConverter.ToInt32(e.Buffer, i * bytesPerSample + 4);
+            }
         }
         else if (bytesPerSamplePerChannel == 4 && AudioDevice.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
         {
             for (int i = 0; i < bufferSampleCount; i++)
-                AudioValues[i] = BitConverter.ToSingle(e.Buffer, i * bytesPerSample);
+            {
+                LeftAudioValues[i] = BitConverter.ToSingle(e.Buffer, i * bytesPerSample);
+                RightAudioValues[i] = BitConverter.ToSingle(e.Buffer, i * bytesPerSample + 4);
+            }
         }
         else
         {
@@ -76,22 +104,19 @@ public partial class FftMonitorForm : Form
 
     private void timer1_Tick(object sender, EventArgs e)
     {
-        double[] paddedAudio = FftSharp.Pad.ZeroPad(AudioValues);
-        double[] fftMag = FftSharp.Transform.FFTmagnitude(paddedAudio);
-        Array.Copy(fftMag, FftValues, fftMag.Length);
-
-        // find the frequency peak
-        int peakIndex = 0;
-        for (int i = 0; i < fftMag.Length; i++)
-        {
-            if (fftMag[i] > fftMag[peakIndex])
-                peakIndex = i;
-        }
-        double fftPeriod = FftSharp.Transform.FFTfreqPeriod(AudioDevice.WaveFormat.SampleRate, fftMag.Length);
-        double peakFrequency = fftPeriod * peakIndex;
-        label1.Text = $"Peak Frequency: {peakFrequency:N0} Hz";
+        double[] paddedAudio = FftSharp.Pad.ZeroPad(LeftAudioValues);
+        var fft = FftSharp.FFT.Forward(paddedAudio);
+        var mag = FftSharp.FFT.Magnitude(fft);
+        Array.Copy(mag, LeftFftValues, mag.Length);
 
         // request a redraw using a non-blocking render queue
-        formsPlot1.RefreshRequest();
+        formsPlot1.Refresh();
+
+        paddedAudio = FftSharp.Pad.ZeroPad(RightAudioValues);
+        fft = FftSharp.FFT.Forward(paddedAudio);
+        mag = FftSharp.FFT.Magnitude(fft);
+        Array.Copy(mag, RightFftValues, mag.Length);
+
+        formsPlot2.Refresh();
     }
 }
