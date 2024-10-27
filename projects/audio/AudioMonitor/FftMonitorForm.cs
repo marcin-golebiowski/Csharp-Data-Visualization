@@ -93,7 +93,7 @@ public partial class FftMonitorForm : Form
             for (int i = 0; i < bufferSampleCount; i++)
             {
                 LeftAudioValues[i] = BitConverter.ToSingle(e.Buffer, i * bytesPerSample);
-                RightAudioValues[i] = BitConverter.ToSingle(e.Buffer, i * bytesPerSample + 4);
+                RightAudioValues[i] = BitConverter.ToSingle(e.Buffer, i * bytesPerSample + bytesPerSamplePerChannel);
             }
         }
         else
